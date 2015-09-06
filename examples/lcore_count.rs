@@ -11,7 +11,8 @@ fn main() {
             })
             .collect();
 
-        let ret = dpdk::rte_eal_init(args.len() as i32, args.as_ptr() as *const *const i8);
-        println!("{}", ret);
+        dpdk::rte_eal_init(args.len() as i32, args.as_ptr() as *const *const i8);
+
+        println!("{}", dpdk::lcore_count());
     }
 }
