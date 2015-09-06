@@ -1,0 +1,7 @@
+DPDK_2.0 {
+	global:
+
+	rte_eth_from_rings;
+
+	local: *;
+};
