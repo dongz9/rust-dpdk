@@ -20,13 +20,13 @@ const RTE_MAX_LCORE: usize = 64usize;
 
 #[repr(C)]
 #[derive(PartialEq)]
-pub enum RteLcoreRole {
+enum RteLcoreRole {
     RoleRte,
     RoleOff,
 }
 
 #[repr(C)]
-pub enum RteProcType {
+enum RteProcType {
     RteProcAuto = -1,
     RteProcPrimary = 0,
     RteProcSecondary,
@@ -34,24 +34,47 @@ pub enum RteProcType {
 }
 
 #[repr(packed)]
-pub struct RteConfig {
-    pub master_lcore: u32,
-    pub lcore_count: u32,
-    pub lcore_role: [RteLcoreRole; RTE_MAX_LCORE],
-    pub process_type: RteProcType,
-    pub flags: u32,
-    pub mem_config: *const c_void,
+struct RteConfig {
+    master_lcore: u32,
+    lcore_count: u32,
+    lcore_role: [RteLcoreRole; RTE_MAX_LCORE],
+    process_type: RteProcType,
+    flags: u32,
+    mem_config: *const c_void,
+}
+
+#[repr(C)]
+enum RteLcoreState {
+    Wait,
+    Running,
+    Finished,
+}
+
+#[repr(C)]
+pub struct LcoreConfig {
+    detected: u32,
+    thread_id: u64,
+    pipe_master2slave: [i32; 2usize],
+    pipe_slave2master: [i32; 2usize],
+    f: *const c_void,
+    arg: *const c_void,
+    ret: i32,
+    state: RteLcoreState,
+    socket_id: u32,
+    core_id: u32,
 }
 
 #[link(name = "rte_eal")]
 #[link(name = "rte_mempool")]
 #[link(name = "rte_ring")]
 extern {
-    pub fn rte_eal_get_configuration() -> *const RteConfig;
+    fn rte_eal_get_configuration() -> *const RteConfig;
 
-    pub fn rte_set_log_level(level: u32) -> ();
+    fn rte_eal_init(argc: i32, argv: *const *const i8) -> i32;
 
-    pub fn rte_eal_init(argc: i32, argv: *const *const i8) -> i32;
+    fn rte_set_log_level(level: u32) -> ();
+
+    static lcore_config: [LcoreConfig; RTE_MAX_LCORE];
 }
 
 pub fn eal_init(args: env::Args) -> i32 {
@@ -66,16 +89,18 @@ pub fn eal_init(args: env::Args) -> i32 {
     }
 }
 
-pub fn eal_get_configuration() -> &'static RteConfig {
+fn eal_get_configuration() -> &'static RteConfig {
     unsafe {
         &(*rte_eal_get_configuration())
     }
 }
 
 pub fn lcore_count() -> u32 {
-    let cfg = eal_get_configuration();
+    eal_get_configuration().lcore_count
+}
 
-    cfg.lcore_count
+pub fn get_master_lcore() -> u32 {
+    eal_get_configuration().master_lcore
 }
 
 pub fn lcore_is_enabled(lcore_id: u32) -> bool {
@@ -85,6 +110,12 @@ pub fn lcore_is_enabled(lcore_id: u32) -> bool {
         false
     } else {
         cfg.lcore_role[lcore_id as usize] != RteLcoreRole::RoleOff
+    }
+}
+
+pub fn lcore_to_socket_id(lcore_id: u32) -> u32 {
+    unsafe {
+        lcore_config[lcore_id as usize].socket_id
     }
 }
 
@@ -169,9 +200,9 @@ pub struct EtherAddr {
 
 #[link(name = "ethdev")]
 extern {
-    pub fn rte_eth_dev_count() -> u8;
+    fn rte_eth_dev_count() -> u8;
 
-    pub fn rte_eth_macaddr_get(port_id: u8, mac_addr: *mut EtherAddr) -> ();
+    fn rte_eth_macaddr_get(port_id: u8, mac_addr: *mut EtherAddr) -> ();
 }
 
 pub fn eth_dev_count() -> u8 {

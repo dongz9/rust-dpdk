@@ -5,7 +5,7 @@
 #
 setup_target()
 {
-    make install T=${RTE_TARGET} EXTRA_CFLAGS=-fPIC
+    make install T=${RTE_TARGET} EXTRA_CFLAGS=-fPIE
 }
 
 #
