@@ -1,6 +1,7 @@
 extern crate libc;
 
 use libc::{c_int, c_uint, size_t, c_void};
+use std::{env, ffi};
 
 const RTE_MEMPOOL_CACHE_MAX_SIZE: usize = 512usize;
 
@@ -30,6 +31,18 @@ extern {
     pub fn rte_set_log_level(level: u32) -> ();
 
     pub fn rte_eal_init(argc: i32, argv: *const *const i8) -> i32;
+}
+
+pub fn eal_init(args: env::Args) -> i32 {
+    unsafe {
+        let c_args: Vec<*const i8> = args
+            .map(|arg| {
+                ffi::CString::from_vec_unchecked(arg.into_bytes()).as_ptr()
+            })
+            .collect();
+
+        rte_eal_init(c_args.len() as i32, c_args.as_ptr() as *const *const i8)
+    }
 }
 
 pub fn eal_get_configuration() -> &'static RteConfig {

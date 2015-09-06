@@ -2,17 +2,10 @@ extern crate dpdk;
 
 use std::env;
 use std::ffi;
+use dpdk::*;
 
 fn main() {
-    unsafe {
-        let args: Vec<*const i8> = env::args()
-            .map(|arg| {
-                ffi::CString::from_vec_unchecked(arg.into_bytes()).as_ptr()
-            })
-            .collect();
+    eal_init(env::args());
 
-        dpdk::rte_eal_init(args.len() as i32, args.as_ptr() as *const *const i8);
-
-        println!("{}", dpdk::lcore_count());
-    }
+    println!("{}", lcore_count());
 }
