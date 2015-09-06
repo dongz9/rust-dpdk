@@ -16,10 +16,31 @@ const RTE_LOG_NOTICE: u32  = 6u32;
 const RTE_LOG_INFO: u32    = 7u32;
 const RTE_LOG_DEBUG: u32   = 8u32;
 
+const RTE_MAX_LCORE: usize = 64usize;
+
 #[repr(C)]
+#[derive(PartialEq)]
+pub enum RteLcoreRole {
+    RoleRte,
+    RoleOff,
+}
+
+#[repr(C)]
+pub enum RteProcType {
+    RteProcAuto = -1,
+    RteProcPrimary = 0,
+    RteProcSecondary,
+    RteProcInvalid,
+}
+
+#[repr(packed)]
 pub struct RteConfig {
     pub master_lcore: u32,
     pub lcore_count: u32,
+    pub lcore_role: [RteLcoreRole; RTE_MAX_LCORE],
+    pub process_type: RteProcType,
+    pub flags: u32,
+    pub mem_config: *const c_void,
 }
 
 #[link(name = "rte_eal")]
@@ -55,6 +76,16 @@ pub fn lcore_count() -> u32 {
     let cfg = eal_get_configuration();
 
     cfg.lcore_count
+}
+
+pub fn lcore_is_enabled(lcore_id: u32) -> bool {
+    let cfg = eal_get_configuration();
+
+    if (lcore_id >= RTE_MAX_LCORE as u32) {
+        false
+    } else {
+        cfg.lcore_role[lcore_id as usize] != RteLcoreRole::RoleOff
+    }
 }
 
 // #[repr(C)]
@@ -142,3 +173,10 @@ extern {
 
     pub fn rte_eth_macaddr_get(port_id: u8, mac_addr: *mut EtherAddr) -> ();
 }
+
+pub fn eth_dev_count() -> u8 {
+    unsafe {
+        rte_eth_dev_count()
+    }
+}
+
