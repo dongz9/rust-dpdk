@@ -5,7 +5,7 @@
 #
 setup_target()
 {
-    make install T=${RTE_TARGET}
+    make install T=${RTE_TARGET} EXTRA_CFLAGS=-fPIC
 }
 
 #
@@ -164,8 +164,6 @@ grep_meminfo()
 
 export RTE_SDK=$(pwd)/../3ps/dpdk
 export RTE_TARGET=x86_64-native-linuxapp-gcc
-
-# echo $RTE_SDK
 
 pushd "$RTE_SDK"; setup_target; popd
 

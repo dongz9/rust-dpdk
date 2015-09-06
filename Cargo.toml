@@ -2,3 +2,7 @@
 name = "dpdk"
 version = "0.1.0"
 authors = ["Dong Zhou <dong.zhou.08@gmail.com>"]
+build = "build.rs"
+
+[dependencies]
+libc = "*"
