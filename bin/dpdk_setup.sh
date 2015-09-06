@@ -162,7 +162,7 @@ grep_meminfo()
 	grep -i huge /proc/meminfo
 }
 
-export RTE_SDK=$(pwd)/../3ps/dpdk-2.1.0
+export RTE_SDK=$(pwd)/../3ps/dpdk
 export RTE_TARGET=x86_64-native-linuxapp-gcc
 
 # echo $RTE_SDK
