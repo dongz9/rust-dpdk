@@ -1,4 +1,4 @@
 [package]
 name = "dpdk"
 version = "0.1.0"
-authors = ["Dong Zhou <dongz@hudson-trading.com>"]
+authors = ["Dong Zhou <dong.zhou.08@gmail.com>"]
